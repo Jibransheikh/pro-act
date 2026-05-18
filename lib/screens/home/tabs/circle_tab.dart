@@ -17,9 +17,9 @@ class CircleTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('ACHIEVEMENTS', style: AppTextStyles.label),
+                  Text('FEED', style: AppTextStyles.label),
                   const SizedBox(height: 2),
-                  const Text('Brothers winning.', style: AppTextStyles.titleLarge),
+                  const Text('What\'s happening.', style: AppTextStyles.titleLarge),
                 ],
               ),
             ),

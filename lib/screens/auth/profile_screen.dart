@@ -9,12 +9,20 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('MY PROFILE'),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, size: 18),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: CustomScrollView(
         slivers: [
           // Header / Profile Info
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 64, 24, 32),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
               child: Column(
                 children: [
                   Stack(

@@ -17,9 +17,9 @@ class _HomeShellState extends State<HomeShell> {
 
   final List<Widget> _screens = const [
     HomeTab(),
-    FeedTab(),
-    CircleTab(),
-    VaultTab(),
+    CircleTab(), // Index 1: Now Achievements Feed
+    FeedTab(),   // Index 2: Now Brothers/Circle List
+    VaultTab(),  // Index 3: Vault
   ];
 
   @override

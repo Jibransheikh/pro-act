@@ -29,6 +29,13 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void _nextStep() {
     if (_currentStep == 0) {
+      // Guest Bypass: If name and username are empty, skip to credentials
+      if (_nameController.text.trim().isEmpty &&
+          _usernameController.text.trim().isEmpty) {
+        setState(() => _currentStep = 1);
+        return;
+      }
+
       if (_nameController.text.trim().isEmpty ||
           _usernameController.text.trim().isEmpty) {
         _showError('Fill in your name and username first.');
@@ -44,8 +51,8 @@ class _SignupScreenState extends State<SignupScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message,
-            style: const TextStyle(color: AppColors.textPrimary)),
-        backgroundColor: AppColors.surfaceRaised,
+            style: const TextStyle(color: Colors.black)),
+        backgroundColor: AppColors.accent,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
@@ -53,8 +60,18 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _handleSignup() async {
-    if (_emailController.text.trim().isEmpty ||
-        _passwordController.text.isEmpty) {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    // Guest Bypass: If credentials are empty, just enter the app
+    if (email.isEmpty && password.isEmpty) {
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
+      return;
+    }
+
+    if (email.isEmpty || password.isEmpty) {
       _showError('Email and password are required.');
       return;
     }

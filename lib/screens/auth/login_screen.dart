@@ -66,9 +66,16 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final errorStr = e.toString().toLowerCase();
+        String message = e.toString().replaceAll('Exception: ', '');
+        
+        if (errorStr.contains('429') || errorStr.contains('too many requests')) {
+          message = 'Too many attempts. Please wait a minute or use "Enter as Guest".';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
+            content: Text(message),
             backgroundColor: AppColors.surfaceRaised,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -207,6 +214,27 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : const Text('Log in'),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Explicit Guest Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacementNamed('/home');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text(
+                    'Enter as Guest',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                  ),
                 ),
               ),
 

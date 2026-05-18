@@ -8,6 +8,9 @@ import 'screens/home/home_shell.dart';
 
 import 'screens/wheel/wheel_screen.dart';
 
+import 'screens/auth/profile_screen.dart';
+import 'screens/wheel/penalty_wheel_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SupabaseService.initialize();
@@ -30,6 +33,8 @@ class ProActApp extends StatelessWidget {
         '/signup': (context) => const SignupScreen(),
         '/home': (context) => const HomeShell(),
         '/wheel': (context) => const WheelScreen(),
+        '/profile': (context) => const ProfileScreen(),
+        '/penalties': (context) => const PenaltyWheelScreen(),
       },
     );
   }

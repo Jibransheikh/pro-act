@@ -65,29 +65,45 @@ class _BottomNav extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => onTap(i),
                   behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isActive ? item.activeIcon : item.icon,
-                        color: isActive
-                            ? AppColors.accent
-                            : AppColors.textMuted,
-                        size: 20,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.label,
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.8,
-                          color: isActive
-                              ? AppColors.accent
-                              : AppColors.textMuted,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: isActive ? AppColors.accent : Colors.transparent,
+                          width: 2,
                         ),
                       ),
-                    ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedScale(
+                          scale: isActive ? 1.2 : 1.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: Icon(
+                            isActive ? item.activeIcon : item.icon,
+                            color: isActive
+                                ? AppColors.accent
+                                : AppColors.textMuted,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.8,
+                            color: isActive
+                                ? AppColors.accent
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

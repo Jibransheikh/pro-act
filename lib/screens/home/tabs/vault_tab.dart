@@ -53,7 +53,7 @@ class VaultTab extends StatelessWidget {
 }
 
 class _BadgeCard extends StatelessWidget {
-  final Badge badge;
+  final AppBadge badge;
   const _BadgeCard({required this.badge});
 
   @override

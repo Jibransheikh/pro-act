@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../theme/app_theme.dart';
 import '../../../models/vow.dart';
+import '../../../widgets/circle_progress_widget.dart';
+import '../../../services/progress_service.dart';
+import 'package:pedometer/pedometer.dart';
+import 'dart:async';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -97,11 +101,31 @@ class _HomeTabState extends State<HomeTab> {
 
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-          // Circle prompt banner
+          // Circle Progress
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: CircleProgressWidget(),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+          // Daily Metrics Header
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: _CirclePromptBanner(),
+              child: Text("DAILY METRICS", style: AppTextStyles.label),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+          // Metrics Grid
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _MetricsSection(),
             ),
           ),
 
@@ -115,7 +139,7 @@ class _HomeTabState extends State<HomeTab> {
             ),
           ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
           // Today's vows section header
           SliverToBoxAdapter(
@@ -281,58 +305,6 @@ class _BrandIcon extends StatelessWidget {
   }
 }
 
-class _CirclePromptBanner extends StatefulWidget {
-  @override
-  State<_CirclePromptBanner> createState() => _CirclePromptBannerState();
-}
-
-class _CirclePromptBannerState extends State<_CirclePromptBanner> {
-  bool _dismissed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    if (_dismissed) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.accentMuted,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.accent.withOpacity(0.3), width: 0.5),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'The circle awaits.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.accent,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Accountability sharpens with witnesses. Create or join a circle.',
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () => setState(() => _dismissed = true),
-            child: const Icon(Icons.close, size: 16, color: AppColors.textMuted),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PenaltyBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -477,6 +449,178 @@ class _NoChallengeCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+class _MetricsSection extends StatefulWidget {
+  @override
+  State<_MetricsSection> createState() => _MetricsSectionState();
+}
+
+class _MetricsSectionState extends State<_MetricsSection> {
+  Map<String, dynamic> _progress = {};
+  bool _loading = true;
+  StreamSubscription<StepCount>? _stepSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProgress();
+    _initPedometer();
+  }
+
+  @override
+  void dispose() {
+    _stepSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadProgress() async {
+    final p = await ProgressService.getTodayProgress();
+    if (mounted) {
+      setState(() {
+        _progress = p;
+        _loading = false;
+      });
+    }
+  }
+
+  void _initPedometer() {
+    _stepSubscription = Pedometer.stepCountStream.listen((event) {
+      ProgressService.updateSteps(event.steps);
+      if (mounted) {
+        setState(() {
+          _progress['steps'] = event.steps;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator(color: AppColors.accent)));
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _MetricCard(
+                title: 'WATER',
+                value: '${_progress['water_ml'] ?? 0}',
+                unit: 'ML',
+                target: '${_progress['water_target'] ?? 2500}',
+                icon: Icons.water_drop_outlined,
+                color: Colors.blueAccent,
+                onTap: () async {
+                  await ProgressService.logWater(250);
+                  _loadProgress();
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _MetricCard(
+                title: 'STEPS',
+                value: '${_progress['steps'] ?? 0}',
+                unit: 'STEPS',
+                target: '${_progress['steps_target'] ?? 8000}',
+                icon: Icons.directions_walk,
+                color: AppColors.success,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _MetricCard(
+          title: 'READING',
+          value: '${_progress['pages_read'] ?? 0}',
+          unit: 'PAGES',
+          target: '${_progress['pages_target'] ?? 20}',
+          icon: Icons.book_outlined,
+          color: AppColors.accent,
+          isWide: true,
+          onTap: () async {
+            await ProgressService.logPages(1);
+            _loadProgress();
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String unit;
+  final String target;
+  final IconData icon;
+  final Color color;
+  final bool isWide;
+  final VoidCallback? onTap;
+
+  const _MetricCard({
+    required this.title,
+    required this.value,
+    required this.unit,
+    required this.target,
+    required this.icon,
+    required this.color,
+    this.isWide = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double progress = (double.tryParse(value) ?? 0) / (double.tryParse(target) ?? 1);
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border, width: 0.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(title, style: AppTextStyles.label.copyWith(fontSize: 9)),
+                Icon(icon, size: 14, color: color),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(value, style: AppTextStyles.titleLarge.copyWith(fontSize: 24)),
+                const SizedBox(width: 4),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(unit, style: AppTextStyles.label.copyWith(fontSize: 8, color: AppColors.textMuted)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: progress.clamp(0.0, 1.0),
+                backgroundColor: AppColors.surfaceRaised,
+                valueColor: AlwaysStoppedAnimation(color),
+                minHeight: 3,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text('GOAL: $target', style: AppTextStyles.label.copyWith(fontSize: 8, color: AppColors.textMuted)),
+          ],
+        ),
       ),
     );
   }

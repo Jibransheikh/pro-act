@@ -24,7 +24,10 @@ class _FeedTabState extends State<FeedTab> {
 
   Future<void> _loadCircles() async {
     final userId = SupabaseService.currentUser?.id;
-    if (userId == null) return;
+    if (userId == null) {
+      _loadMockCircles();
+      return;
+    }
 
     try {
       final response = await _supabase
@@ -33,15 +36,56 @@ class _FeedTabState extends State<FeedTab> {
           .eq('user_id', userId);
 
       if (mounted) {
-        setState(() {
-          _myCircles = List<Map<String, dynamic>>.from(response);
-          _loading = false;
-        });
+        final List<Map<String, dynamic>> circles = List<Map<String, dynamic>>.from(response);
+        if (circles.isEmpty) {
+          _loadMockCircles();
+        } else {
+          setState(() {
+            _myCircles = circles;
+            _loading = false;
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error loading circles: $e');
-      if (mounted) setState(() => _loading = false);
+      _loadMockCircles();
     }
+  }
+
+  void _loadMockCircles() {
+    if (!mounted) return;
+    setState(() {
+      _myCircles = [
+        {
+          'tribes': {
+            'id': 'mock-1',
+            'name': 'THE 5 AM CLUB',
+            'description': 'Early risers, high achievers. No excuses.',
+            'intensity': 'hardcore',
+            'invite_code': 'RISE5A',
+          }
+        },
+        {
+          'tribes': {
+            'id': 'mock-2',
+            'name': 'STOIC BROTHERHOOD',
+            'description': 'Daily reading and cold plunges.',
+            'intensity': 'standard',
+            'invite_code': 'STOIC7',
+          }
+        },
+        {
+          'tribes': {
+            'id': 'mock-3',
+            'name': 'MONK MODE',
+            'description': 'Deep work and total focus.',
+            'intensity': 'hardcore',
+            'invite_code': 'MONK90',
+          }
+        },
+      ];
+      _loading = false;
+    });
   }
 
   @override
